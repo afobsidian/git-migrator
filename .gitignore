@@ -35,28 +35,52 @@ build/
 .DS_Store
 Thumbs.db
 
-# Application specific
+# Application specific - SQLite state storage
 *.db
 *.sqlite
 *.sqlite3
+data/
+.migration-state/
+*.bak
 
-# Test artifacts
+# Test artifacts and fixtures
 test-results/
+test-output/
 test/fixtures/large/
+test/fixtures/**/CVS/
+test/fixtures/**/.svn/
+test/fixtures/**/*.git/
+
+# Performance testing
+benchmarks/
+*.bench
+*.prof
+cpu.prof
+mem.prof
+
+# Requirements tracking (auto-generated)
+test/requirements/STATUS.md
 
 # Temporary files
 tmp/
 temp/
+*.tmp
+*.temp
 
 # Configuration (keep templates)
 config.yaml
+config/*.yaml
 !config.yaml.example
+!config/*.example.yaml
 
-# Logs
+# Logs and debugging
 *.log
+logs/
+debug/
 
 # Docker
 .docker/
 
-# State files (for resume capability)
-.migration-state/
+# Migration working directories
+work/
+migrations/*/

@@ -19,8 +19,8 @@ This roadmap outlines the development timeline for Git-Migrator, organized into 
 | Sprint 1 | Foundation & Testing Infrastructure | ✅ Complete | 100% |
 | Sprint 2 | CVS Reading & RCS Parsing | ✅ Complete | 100% |
 | Sprint 3 | Git Writing & Commit Application | ✅ Complete | 100% |
-| Sprint 4 | Migration Integration | 🔜 Next | 0% |
-| Sprint 5 | Web UI & Docker | ⚪ Planned | 0% |
+| Sprint 4 | Migration Integration | ✅ Complete | 100% |
+| Sprint 5 | Web UI & Docker | 🔜 Next | 0% |
 | Sprint 6 | Testing, Polish & Release | ⚪ Planned | 0% |
 
 ---
@@ -158,7 +158,7 @@ gantt
 
 ---
 
-### Sprint 4: Migration Integration (Weeks 7-8) 🔜 NEXT
+### Sprint 4: Migration Integration (Weeks 7-8) ✅ COMPLETE
 
 #### Objectives
 - End-to-end migration pipeline
@@ -170,47 +170,20 @@ gantt
 #### Requirements
 | ID | Requirement | Tests | Status |
 |----|-------------|-------|--------|
-| REQ-001 | CVS to Git Migration | 30 | 🟡 |
-| REQ-002 | Author mapping | 10 | ⚪ |
-| REQ-005 | Resume capability | 12 | ⚪ |
-| REQ-016 | Progress reporting | 8 | ⚪ |
-| REQ-017 | State persistence | 10 | ⚪ |
+| REQ-001 | CVS to Git Migration | 30 | ✅ |
+| REQ-002 | Author mapping | 10 | ✅ |
+| REQ-005 | Resume capability | 12 | ✅ |
+| REQ-016 | Progress reporting | 8 | ✅ |
+| REQ-017 | State persistence | 10 | ✅ |
 
-#### Tasks
-
-**Day 1-3: Migration Orchestrator**
-- [ ] Create `test/requirements/REQ-001-cvs-to-git-migration/`
-- [ ] Write tests for migration orchestrator
-- [ ] Implement `internal/core/migration.go`
-- [ ] Test: Orchestration logic
-
-**Day 4-5: Author Mapping**
-- [ ] Create `test/requirements/REQ-002-author-mapping/`
-- [ ] Write tests for author mapping
-- [ ] Implement `internal/mapping/authors.go`
-- [ ] Test: CVS users mapped to Git authors
-
-**Day 6-8: Progress Reporting**
-- [ ] Create `test/requirements/REQ-016-progress/`
-- [ ] Write tests for progress reporter
-- [ ] Implement `internal/progress/reporter.go`
-- [ ] Implement `internal/progress/terminal.go`
-- [ ] Test: Progress displayed in CLI
-
-**Day 9-11: State & Resume**
-- [ ] Create `test/requirements/REQ-005-resume/`
-- [ ] Write tests for state persistence
-- [ ] Implement `internal/core/state.go`
-- [ ] Implement `internal/storage/sqlite.go`
-- [ ] Write tests for resume capability
-- [ ] Test: Resume interrupted migration
-
-**Day 12-14: Integration & Regression**
-- [ ] Write end-to-end tests for full migration
-- [ ] Run: `make test-regression`
-- [ ] Fix any failures
-- [ ] Update requirements matrix
-- [ ] Commit and push
+#### Completed Tasks
+- [x] Migration orchestrator (`internal/core/migration.go`)
+- [x] Author mapping (`internal/mapping/authors.go`)
+- [x] Progress reporting (`internal/progress/reporter.go`)
+- [x] State persistence (`internal/storage/state.go`)
+- [x] Resume capability (`internal/core/migration.go`)
+- [x] SQLite storage with modernc.org/sqlite driver
+- [x] All tests passing
 
 #### Deliverables
 - ✅ Migration orchestrator
@@ -533,5 +506,6 @@ Update `test/requirements/STATUS.md` with:
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2025-02-15 | 1.2 | Sprint 4 completed; migration integration done |
 | 2025-02-15 | 1.1 | Sprint 2 & 3 completed; updated progress |
 | 2025-01-18 | 1.0 | Initial roadmap |

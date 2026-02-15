@@ -1,6 +1,7 @@
 # .goreleaser.yml
 # Git-Migrator Release Configuration
 # https://goreleaser.com/
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 
 # Project metadata
 project_name: git-migrator

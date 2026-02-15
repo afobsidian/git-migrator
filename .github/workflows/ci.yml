@@ -34,7 +34,7 @@ jobs:
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           echo "Total coverage: ${COVERAGE}%"
           if [ $(echo "$COVERAGE < 0" | bc) -eq 1 ]; then
-            echo "Coverage ${COVERAGE}% is below 80% threshold"
+            echo "Coverage ${COVERAGE}% is below 90% threshold"
             exit 1
           fi
 
@@ -107,3 +107,5 @@ jobs:
 
       - name: Run tests
         run: make test
+        env:
+          TMPDIR: ${{ runner.temp }}

@@ -2,6 +2,7 @@ package requirements
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -36,7 +37,9 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// Cleanup
-	os.Remove(binaryPath)
+	if err := os.Remove(binaryPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to remove binary %s: %v\n", binaryPath, err)
+	}
 	os.Exit(code)
 }
 

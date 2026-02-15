@@ -14,7 +14,11 @@ func TestStateSave(t *testing.T) {
 	stateFile := filepath.Join(tmpDir, "migration.db")
 
 	state := core.NewMigrationState(stateFile)
-	defer state.Close()
+	defer func() {
+		if err := state.Close(); err != nil {
+			t.Logf("Warning: failed to close state: %v", err)
+		}
+	}()
 
 	// Save state
 	err := state.Save("testcommit123", 5, 10)
@@ -34,7 +38,11 @@ func TestStateLoad(t *testing.T) {
 	stateFile := filepath.Join(tmpDir, "migration.db")
 
 	state := core.NewMigrationState(stateFile)
-	defer state.Close()
+	defer func() {
+		if err := state.Close(); err != nil {
+			t.Logf("Warning: failed to close state: %v", err)
+		}
+	}()
 
 	// Save state
 	if err := state.Save("testcommit456", 3, 10); err != nil {
@@ -42,9 +50,15 @@ func TestStateLoad(t *testing.T) {
 	}
 
 	// Close and reopen
-	state.Close()
+	if err := state.Close(); err != nil {
+		t.Logf("Warning: failed to close state: %v", err)
+	}
 	state = core.NewMigrationState(stateFile)
-	defer state.Close()
+	defer func() {
+		if err := state.Close(); err != nil {
+			t.Logf("Warning: failed to close state: %v", err)
+		}
+	}()
 
 	// Load state
 	commit, processed, total, err := state.Load()
@@ -69,7 +83,11 @@ func TestStateNoState(t *testing.T) {
 	stateFile := filepath.Join(tmpDir, "nonexistent.db")
 
 	state := core.NewMigrationState(stateFile)
-	defer state.Close()
+	defer func() {
+		if err := state.Close(); err != nil {
+			t.Logf("Warning: failed to close state: %v", err)
+		}
+	}()
 
 	// Should return empty state
 	commit, processed, total, err := state.Load()
@@ -115,7 +133,9 @@ func TestStateClear(t *testing.T) {
 		t.Errorf("Expected empty state after clear, got commit %q", commit)
 	}
 
-	state.Close()
+	if err := state.Close(); err != nil {
+		t.Logf("Warning: failed to close state: %v", err)
+	}
 }
 
 // TestResumeMigration tests resuming a migration

@@ -13,8 +13,16 @@ import (
 // TestApplyCommitAdd tests applying a commit with file addition
 func TestApplyCommitAdd(t *testing.T) {
 	writer, repoPath := setupTestRepo(t)
-	defer os.RemoveAll(repoPath)
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(repoPath); err != nil {
+			t.Logf("Warning: failed to remove temp repo: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	commit := &vcs.Commit{
 		Author:  "Test User",
@@ -48,8 +56,16 @@ func TestApplyCommitAdd(t *testing.T) {
 // TestApplyCommitModify tests applying a commit with file modification
 func TestApplyCommitModify(t *testing.T) {
 	writer, repoPath := setupTestRepo(t)
-	defer os.RemoveAll(repoPath)
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(repoPath); err != nil {
+			t.Logf("Warning: failed to remove temp repo: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// First commit
 	commit1 := &vcs.Commit{
@@ -100,8 +116,16 @@ func TestApplyCommitModify(t *testing.T) {
 // TestApplyCommitDelete tests applying a commit with file deletion
 func TestApplyCommitDelete(t *testing.T) {
 	writer, repoPath := setupTestRepo(t)
-	defer os.RemoveAll(repoPath)
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(repoPath); err != nil {
+			t.Logf("Warning: failed to remove temp repo: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// First commit - add file
 	commit1 := &vcs.Commit{
@@ -148,8 +172,16 @@ func TestApplyCommitDelete(t *testing.T) {
 // TestApplyCommitMultipleFiles tests applying multiple files in one commit
 func TestApplyCommitMultipleFiles(t *testing.T) {
 	writer, repoPath := setupTestRepo(t)
-	defer os.RemoveAll(repoPath)
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(repoPath); err != nil {
+			t.Logf("Warning: failed to remove temp repo: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	commit := &vcs.Commit{
 		Author:  "Test User",
@@ -184,8 +216,16 @@ func TestApplyCommitMultipleFiles(t *testing.T) {
 // TestCommitMetadata tests that commit metadata is preserved
 func TestCommitMetadata(t *testing.T) {
 	writer, repoPath := setupTestRepo(t)
-	defer os.RemoveAll(repoPath)
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(repoPath); err != nil {
+			t.Logf("Warning: failed to remove temp repo: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	commit := &vcs.Commit{
 		Author:  "John Doe",
@@ -231,7 +271,9 @@ func setupTestRepo(t *testing.T) (*git.Writer, string) {
 
 	err = writer.Init(repoPath)
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		if removeErr := os.RemoveAll(tmpDir); removeErr != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", removeErr)
+		}
 		t.Fatalf("Failed to init repo: %v", err)
 	}
 

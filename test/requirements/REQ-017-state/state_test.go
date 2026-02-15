@@ -18,7 +18,11 @@ func TestStateDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create state DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	// Verify database file exists
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -35,7 +39,11 @@ func TestStateSaveLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create state DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	// Save state
 	state := &storage.MigrationState{
@@ -79,7 +87,11 @@ func TestStateUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create state DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	// Initial save
 	state := &storage.MigrationState{
@@ -123,7 +135,11 @@ func TestStateComplete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create state DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	// Save state
 	state := &storage.MigrationState{
@@ -162,7 +178,11 @@ func TestStateHistory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create state DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	// Create multiple migrations
 	for i := 1; i <= 3; i++ {
@@ -199,7 +219,11 @@ func TestStateDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create state DB: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 
 	// Save state
 	state := &storage.MigrationState{

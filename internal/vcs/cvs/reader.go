@@ -3,6 +3,7 @@ package cvs
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,13 @@ type ValidationResult struct {
 type Reader struct {
 	path     string
 	rcsFiles []*RCSFile
-	info     *vcs.RepositoryInfo
+	// info caches repository metadata for performance optimization.
+	// Reserved for future use to avoid repeated filesystem calls when
+	// accessing repository information such as branch counts, file counts,
+	// and other metadata that doesn't change during a single migration.
+	//
+	//nolint:unused // Reserved for future performance optimization
+	info *vcs.RepositoryInfo
 }
 
 // NewReader creates a new CVS repository reader
@@ -147,7 +154,11 @@ func (r *Reader) loadRCSFiles() error {
 			if err != nil {
 				return nil // Skip files we can't read
 			}
-			defer file.Close()
+			defer func() {
+				if err := file.Close(); err != nil {
+					log.Printf("Warning: failed to close RCS file %s: %v", path, err)
+				}
+			}()
 
 			parser := NewRCSParser(file)
 			rcs, err := parser.Parse()

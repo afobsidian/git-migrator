@@ -4,6 +4,7 @@ package cvs
 import (
 	"bufio"
 	"io"
+	"log"
 )
 
 // TokenType represents the type of a token in RCS format
@@ -58,11 +59,15 @@ func (l *RCSLexer) NextToken() Token {
 		return l.readString()
 	default:
 		if isDigit(char) || (char == '.' && isDigit(l.peekChar())) {
-			l.reader.UnreadRune()
+			if err := l.reader.UnreadRune(); err != nil {
+				log.Printf("Warning: failed to unread rune before reading number: %v", err)
+			}
 			return l.readNumber()
 		}
 		if isAlpha(char) || char == '_' {
-			l.reader.UnreadRune()
+			if err := l.reader.UnreadRune(); err != nil {
+				log.Printf("Warning: failed to unread rune before reading identifier: %v", err)
+			}
 			return l.readIdent()
 		}
 		// Skip unknown characters
@@ -75,7 +80,9 @@ func (l *RCSLexer) peekChar() rune {
 	if err != nil {
 		return 0
 	}
-	l.reader.UnreadRune()
+	if err := l.reader.UnreadRune(); err != nil {
+		log.Printf("Warning: failed to unread rune in peekChar: %v", err)
+	}
 	return char
 }
 
@@ -89,7 +96,9 @@ func (l *RCSLexer) skipWhitespace() {
 			l.line++
 		}
 		if !isWhitespace(char) && char != '\n' {
-			l.reader.UnreadRune()
+			if err := l.reader.UnreadRune(); err != nil {
+				log.Printf("Warning: failed to unread rune in skipWhitespace: %v", err)
+			}
 			return
 		}
 	}
@@ -115,7 +124,9 @@ func (l *RCSLexer) readString() Token {
 				result = append(result, '@')
 			} else {
 				// End of string - unread the extra character
-				l.reader.UnreadRune()
+				if err := l.reader.UnreadRune(); err != nil {
+					log.Printf("Warning: failed to unread rune in readString: %v", err)
+				}
 				break
 			}
 		} else {
@@ -140,7 +151,9 @@ func (l *RCSLexer) readNumber() Token {
 		if isDigit(char) || char == '.' {
 			result = append(result, char)
 		} else {
-			l.reader.UnreadRune()
+			if err := l.reader.UnreadRune(); err != nil {
+				log.Printf("Warning: failed to unread rune in readNumber: %v", err)
+			}
 			break
 		}
 	}
@@ -159,7 +172,9 @@ func (l *RCSLexer) readIdent() Token {
 		if isAlpha(char) || isDigit(char) || char == '_' || char == '-' {
 			result = append(result, char)
 		} else {
-			l.reader.UnreadRune()
+			if err := l.reader.UnreadRune(); err != nil {
+				log.Printf("Warning: failed to unread rune in readIdent: %v", err)
+			}
 			break
 		}
 	}

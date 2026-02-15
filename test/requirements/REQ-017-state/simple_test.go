@@ -11,5 +11,9 @@ func TestSimpleDBConnection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Warning: failed to close database: %v", err)
+		}
+	}()
 }

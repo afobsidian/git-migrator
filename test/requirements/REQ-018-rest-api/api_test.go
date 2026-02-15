@@ -124,7 +124,7 @@ func TestAPIGetMigrationStatus(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	var createResp web.APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &createResp)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &createResp), "Failed to unmarshal create response")
 	createData := createResp.Data.(map[string]interface{})
 	migrationID := createData["id"].(string)
 
@@ -173,7 +173,7 @@ func TestAPIStopMigration(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	var createResp web.APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &createResp)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &createResp), "Failed to unmarshal create response")
 	createData := createResp.Data.(map[string]interface{})
 	migrationID := createData["id"].(string)
 

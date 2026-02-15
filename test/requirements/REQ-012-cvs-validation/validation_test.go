@@ -15,7 +15,11 @@ func TestCVSValidatorValidRepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create CVSROOT
 	cvsroot := filepath.Join(tmpDir, "CVSROOT")
@@ -45,7 +49,11 @@ func TestCVSValidatorMissingCVSRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	validator := cvs.NewValidator()
 	result := validator.Validate(tmpDir)
@@ -77,8 +85,14 @@ func TestCVSValidatorNotDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() {
+		if err := os.Remove(tmpFile.Name()); err != nil {
+			t.Logf("Warning: failed to remove temp file %s: %v", tmpFile.Name(), err)
+		}
+	}()
+	if err := tmpFile.Close(); err != nil {
+		t.Logf("Warning: failed to close temp file: %v", err)
+	}
 
 	validator := cvs.NewValidator()
 	result := validator.Validate(tmpFile.Name())
@@ -104,7 +118,11 @@ func TestCVSValidatorModule(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create CVSROOT
 	cvsroot := filepath.Join(tmpDir, "CVSROOT")
@@ -156,7 +174,11 @@ func TestCVSValidatorWarnings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create CVSROOT (minimal)
 	cvsroot := filepath.Join(tmpDir, "CVSROOT")

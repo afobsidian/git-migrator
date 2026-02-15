@@ -1,7 +1,7 @@
 package requirements
 
 import (
-	"fmt" // added missing import
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,8 +14,16 @@ import (
 // TestCreateBranch tests creating a branch
 func TestCreateBranch(t *testing.T) {
 	writer, repoPath := setupTestRepoWithCommit(t)
-	defer os.RemoveAll(filepath.Dir(filepath.Dir(repoPath)))
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(filepath.Dir(filepath.Dir(repoPath))); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// Create a branch
 	err := writer.CreateBranch("feature-branch", "HEAD")
@@ -44,8 +52,16 @@ func TestCreateBranch(t *testing.T) {
 // TestCreateBranchFromRevision tests creating a branch from specific revision
 func TestCreateBranchFromRevision(t *testing.T) {
 	writer, repoPath := setupTestRepoWithCommits(t, 2)
-	defer os.RemoveAll(filepath.Dir(filepath.Dir(repoPath)))
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(filepath.Dir(filepath.Dir(repoPath))); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// Get first commit hash
 	hashes, err := writer.GetCommitHashes()
@@ -84,8 +100,16 @@ func TestCreateBranchFromRevision(t *testing.T) {
 // TestCreateTag tests creating a lightweight tag
 func TestCreateTag(t *testing.T) {
 	writer, repoPath := setupTestRepoWithCommit(t)
-	defer os.RemoveAll(filepath.Dir(filepath.Dir(repoPath)))
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(filepath.Dir(filepath.Dir(repoPath))); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// Create a tag
 	err := writer.CreateTag("v1.0.0", "HEAD", "")
@@ -107,8 +131,16 @@ func TestCreateTag(t *testing.T) {
 // TestCreateAnnotatedTag tests creating an annotated tag
 func TestCreateAnnotatedTag(t *testing.T) {
 	writer, repoPath := setupTestRepoWithCommit(t)
-	defer os.RemoveAll(filepath.Dir(filepath.Dir(repoPath)))
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(filepath.Dir(filepath.Dir(repoPath))); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// Create an annotated tag
 	err := writer.CreateTag("v1.0.0", "HEAD", "Release version 1.0.0")
@@ -130,8 +162,16 @@ func TestCreateAnnotatedTag(t *testing.T) {
 // TestListBranches tests listing branches
 func TestListBranches(t *testing.T) {
 	writer, repoPath := setupTestRepoWithCommit(t)
-	defer os.RemoveAll(filepath.Dir(filepath.Dir(repoPath)))
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(filepath.Dir(filepath.Dir(repoPath))); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// Create multiple branches
 	branches := []string{"feature-a", "feature-b", "bugfix-1"}
@@ -166,8 +206,16 @@ func TestListBranches(t *testing.T) {
 // TestListTags tests listing tags
 func TestListTags(t *testing.T) {
 	writer, repoPath := setupTestRepoWithCommit(t)
-	defer os.RemoveAll(filepath.Dir(filepath.Dir(repoPath)))
-	defer writer.Close()
+	defer func() {
+		if err := os.RemoveAll(filepath.Dir(filepath.Dir(repoPath))); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
+	defer func() {
+		if err := writer.Close(); err != nil {
+			t.Logf("Warning: failed to close writer: %v", err)
+		}
+	}()
 
 	// Create multiple tags
 	tags := []string{"v1.0.0", "v1.0.1", "v2.0.0-beta"}
@@ -204,7 +252,10 @@ func setupTestRepoWithCommit(t *testing.T) (*git.Writer, string) {
 
 	err = writer.Init(repoPath)
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		err = os.RemoveAll(tmpDir)
+		if err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
 		t.Fatalf("Failed to init repo: %v", err)
 	}
 
@@ -219,7 +270,10 @@ func setupTestRepoWithCommit(t *testing.T) (*git.Writer, string) {
 		},
 	}
 	if err := writer.ApplyCommit(commit); err != nil {
-		os.RemoveAll(tmpDir)
+		err = os.RemoveAll(tmpDir)
+		if err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
 		t.Fatalf("Failed to add commit: %v", err)
 	}
 
@@ -238,7 +292,9 @@ func setupTestRepoWithCommits(t *testing.T, count int) (*git.Writer, string) {
 
 	err = writer.Init(repoPath)
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		if removeErr := os.RemoveAll(tmpDir); removeErr != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", removeErr)
+		}
 		t.Fatalf("Failed to init repo: %v", err)
 	}
 
@@ -256,7 +312,9 @@ func setupTestRepoWithCommits(t *testing.T, count int) (*git.Writer, string) {
 			},
 		}
 		if err := writer.ApplyCommit(commit); err != nil {
-			os.RemoveAll(tmpDir)
+			if removeErr := os.RemoveAll(tmpDir); removeErr != nil {
+				t.Logf("Warning: failed to remove temp dir: %v", removeErr)
+			}
 			t.Fatalf("Failed to add commit: %v", err)
 		}
 	}

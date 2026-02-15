@@ -46,7 +46,7 @@ type MigrationStatus struct {
 
 // ProgressEvent is a WebSocket event for progress updates
 type ProgressEvent struct {
-	Type string      `json:"type"`
+	Type string       `json:"type"`
 	Data ProgressData `json:"data"`
 }
 

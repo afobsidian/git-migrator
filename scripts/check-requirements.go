@@ -94,7 +94,7 @@ func checkRequirement(reqID string) string {
 
 	// Find all test files (both *_test.go and test.go patterns)
 	testFiles := []string{}
-	filepath.WalkDir(reqDir, func(path string, d os.DirEntry, err error) error {
+	if err := filepath.WalkDir(reqDir, func(path string, d os.DirEntry, err error) error {
 		if err == nil && !d.IsDir() {
 			filename := filepath.Base(path)
 			if strings.HasSuffix(path, "_test.go") || filename == "test.go" {
@@ -102,7 +102,9 @@ func checkRequirement(reqID string) string {
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to walk directory %s: %v\n", reqDir, err)
+	}
 
 	if len(testFiles) == 0 {
 		return "⚪ Not Started"

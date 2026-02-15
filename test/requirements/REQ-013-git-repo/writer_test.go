@@ -15,7 +15,11 @@ func TestGitWriterInit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	repoPath := filepath.Join(tmpDir, "test-repo")
 	writer := git.NewWriter()
@@ -39,7 +43,11 @@ func TestGitWriterInitWithConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	repoPath := filepath.Join(tmpDir, "test-repo")
 	writer := git.NewWriter()
@@ -70,7 +78,11 @@ func TestGitWriterIsRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	repoPath := filepath.Join(tmpDir, "test-repo")
 	writer := git.NewWriter()

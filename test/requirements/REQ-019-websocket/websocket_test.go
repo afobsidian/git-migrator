@@ -14,12 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 // TestWebSocketConnection tests basic WebSocket connection
 func TestWebSocketConnection(t *testing.T) {
 	server := web.NewServer(web.ServerConfig{
@@ -36,7 +30,11 @@ func TestWebSocketConnection(t *testing.T) {
 	// Connect
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	require.NoError(t, err)
-	defer ws.Close()
+	defer func() {
+		if err := ws.Close(); err != nil {
+			t.Logf("Warning: failed to close websocket: %v", err)
+		}
+	}()
 
 	// Connection should succeed
 	assert.NotNil(t, ws)
@@ -55,10 +53,16 @@ func TestWebSocketProgressMessage(t *testing.T) {
 
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	require.NoError(t, err)
-	defer ws.Close()
+	defer func() {
+		if err := ws.Close(); err != nil {
+			t.Logf("Warning: failed to close websocket: %v", err)
+		}
+	}()
 
 	// Set read deadline
-	ws.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err := ws.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		t.Logf("Warning: failed to set read deadline: %v", err)
+	}
 
 	// Read message
 	_, message, err := ws.ReadMessage()
@@ -90,17 +94,25 @@ func TestWebSocketInvalidMigration(t *testing.T) {
 		// Connection rejection is acceptable
 		return
 	}
-	defer ws.Close()
+	defer func() {
+		if err := ws.Close(); err != nil {
+			t.Logf("Warning: failed to close websocket: %v", err)
+		}
+	}()
 
 	// If connected, should receive error message
-	ws.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if err := ws.SetReadDeadline(time.Now().Add(2 * time.Second)); err != nil {
+		t.Logf("Warning: failed to set read deadline: %v", err)
+	}
 	_, message, err := ws.ReadMessage()
 	if err != nil {
 		return // Timeout is acceptable
 	}
 
 	var event web.ProgressEvent
-	json.Unmarshal(message, &event)
+	if err := json.Unmarshal(message, &event); err != nil {
+		t.Logf("Warning: failed to unmarshal event: %v", err)
+	}
 	// Should receive error or status update
 	assert.NotEmpty(t, event.Type)
 }
@@ -119,12 +131,20 @@ func TestWebSocketMultipleClients(t *testing.T) {
 	// Connect first client
 	ws1, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	require.NoError(t, err)
-	defer ws1.Close()
+	defer func() {
+		if err := ws1.Close(); err != nil {
+			t.Logf("Warning: failed to close websocket 1: %v", err)
+		}
+	}()
 
 	// Connect second client
 	ws2, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	require.NoError(t, err)
-	defer ws2.Close()
+	defer func() {
+		if err := ws2.Close(); err != nil {
+			t.Logf("Warning: failed to close websocket 2: %v", err)
+		}
+	}()
 
 	// Both should be connected
 	assert.NotNil(t, ws1)
@@ -153,10 +173,16 @@ func TestWebSocketCloseOnCompletion(t *testing.T) {
 	body, _ := json.Marshal(migrationReq)
 	resp, err := http.Post(ts.URL+"/api/migrations", "application/json", strings.NewReader(string(body)))
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Warning: failed to close response body: %v", err)
+		}
+	}()
 
 	var createResp web.APIResponse
-	json.NewDecoder(resp.Body).Decode(&createResp)
+	if err := json.NewDecoder(resp.Body).Decode(&createResp); err != nil {
+		t.Fatalf("Failed to decode create response: %v", err)
+	}
 	data := createResp.Data.(map[string]interface{})
 	migrationID := data["id"].(string)
 
@@ -164,10 +190,16 @@ func TestWebSocketCloseOnCompletion(t *testing.T) {
 	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws/progress/" + migrationID
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	require.NoError(t, err)
-	defer ws.Close()
+	defer func() {
+		if err := ws.Close(); err != nil {
+			t.Logf("Warning: failed to close websocket: %v", err)
+		}
+	}()
 
 	// Read messages until close or timeout
-	ws.SetReadDeadline(time.Now().Add(3 * time.Second))
+	if err := ws.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
+		t.Logf("Warning: failed to set read deadline: %v", err)
+	}
 	for {
 		_, _, err := ws.ReadMessage()
 		if err != nil {

@@ -4,6 +4,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -43,7 +44,9 @@ func NewStateDB(path string) (*StateDB, error) {
 
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		if closeErr := db.Close(); closeErr != nil {
+			log.Printf("Warning: failed to close database after ping error: %v", closeErr)
+		}
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
@@ -60,7 +63,9 @@ func NewStateDB(path string) (*StateDB, error) {
 	}
 	for _, pragma := range pragmas {
 		if _, err := db.Exec(pragma); err != nil {
-			db.Close()
+			if closeErr := db.Close(); closeErr != nil {
+				log.Printf("Warning: failed to close database after pragma error: %v", closeErr)
+			}
 			return nil, fmt.Errorf("failed to set pragma: %w", err)
 		}
 	}
@@ -83,7 +88,9 @@ func NewStateDB(path string) (*StateDB, error) {
 
 	for _, stmt := range schemaStatements {
 		if _, err := db.Exec(stmt); err != nil {
-			db.Close()
+			if closeErr := db.Close(); closeErr != nil {
+				log.Printf("Warning: failed to close database after schema error: %v", closeErr)
+			}
 			return nil, fmt.Errorf("failed to execute schema statement: %w", err)
 		}
 	}
@@ -92,7 +99,9 @@ func NewStateDB(path string) (*StateDB, error) {
 	// This is important for tests that check for file existence immediately after creation
 	if _, err := db.Exec("SELECT 1;"); err != nil {
 		// This shouldn't fail, but if it does, the database has issues
-		db.Close()
+		if closeErr := db.Close(); closeErr != nil {
+			log.Printf("Warning: failed to close database after verification error: %v", closeErr)
+		}
 		return nil, fmt.Errorf("failed to verify database: %w", err)
 	}
 
@@ -181,7 +190,11 @@ func (sdb *StateDB) History() ([]*MigrationState, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Warning: failed to close rows: %v", err)
+		}
+	}()
 
 	var history []*MigrationState
 	for rows.Next() {

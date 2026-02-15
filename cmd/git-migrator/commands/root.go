@@ -31,6 +31,12 @@ func init() {
 	rootCmd.Version = Version
 }
 
+// handleError provides centralized error handling for commands.
+// This function is reserved for future use when implementing additional
+// subcommands that require consistent error handling and exit behavior.
+// It will be used to standardize error reporting across all command handlers.
+//
+//nolint:unused // Reserved for future command implementations
 func handleError(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -72,6 +73,7 @@ func (m *Migrator) Run() error {
 		defer func() {
 			if err := m.target.Close(); err != nil {
 				// Log error but don't fail - cleanup is best effort
+				log.Printf("Warning: failed to close target repository: %v", err)
 			}
 		}()
 	}
@@ -144,6 +146,7 @@ func (m *Migrator) Run() error {
 		if m.config.InterruptAt > 0 && i+1 >= m.config.InterruptAt {
 			if err := m.saveState(commit.Revision, i+1, len(commits)); err != nil {
 				// Log error but continue - this is test interruption
+				log.Printf("Warning: failed to save state during test interruption: %v", err)
 			}
 			return fmt.Errorf("interrupted at commit %d", i+1)
 		}
@@ -274,7 +277,8 @@ func (m *Migrator) createBranches() error {
 
 		m.reporter.SetOperation(fmt.Sprintf("Creating branch %s", gitBranch))
 		if err := m.target.CreateBranch(gitBranch, "HEAD"); err != nil {
-			// Log but don't fail
+			// Log error but don't fail - branch creation is best effort
+			log.Printf("Warning: failed to create branch %s: %v", gitBranch, err)
 		}
 	}
 
@@ -295,7 +299,8 @@ func (m *Migrator) createTags() error {
 
 		m.reporter.SetOperation(fmt.Sprintf("Creating tag %s", gitTag))
 		if err := m.target.CreateTag(gitTag, commitHash, ""); err != nil {
-			// Log but don't fail
+			// Log error but don't fail - tag creation is best effort
+			log.Printf("Warning: failed to create tag %s: %v", gitTag, err)
 		}
 	}
 

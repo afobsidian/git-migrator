@@ -3,6 +3,7 @@ package git
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -186,7 +187,8 @@ func (w *Writer) ApplyCommit(commit *vcs.Commit) error {
 			// Remove from staging
 			_, err := w.worktree.Remove(fc.Path)
 			if err != nil {
-				// Ignore if file wasn't tracked
+				// Log if file wasn't tracked - this is expected for some deletions
+				log.Printf("Debug: file %s not tracked in git, skipping removal: %v", fc.Path, err)
 			}
 		}
 	}

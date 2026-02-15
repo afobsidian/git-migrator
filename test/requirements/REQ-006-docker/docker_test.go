@@ -54,7 +54,9 @@ func TestDockerfileBuild(t *testing.T) {
 	require.NoError(t, err, "Docker image should build successfully")
 
 	// Cleanup
-	exec.Command("docker", "rmi", "git-migrator-test").Run()
+	if err := exec.Command("docker", "rmi", "git-migrator-test").Run(); err != nil {
+		t.Logf("Warning: failed to remove docker image: %v", err)
+	}
 }
 
 // TestDockerComposeSyntax tests docker-compose.yml syntax
@@ -93,7 +95,11 @@ func TestDockerImageSize(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Skip("Could not build image")
 	}
-	defer exec.Command("docker", "rmi", "git-migrator-size-test").Run()
+	defer func() {
+		if err := exec.Command("docker", "rmi", "git-migrator-size-test").Run(); err != nil {
+			t.Logf("Warning: failed to remove docker image: %v", err)
+		}
+	}()
 
 	// Check size
 	cmd = exec.Command("docker", "image", "inspect", "--format={{.Size}}", "git-migrator-size-test")
@@ -127,7 +133,11 @@ func TestDockerRunCLI(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Skip("Could not build image")
 	}
-	defer exec.Command("docker", "rmi", "git-migrator-cli-test").Run()
+	defer func() {
+		if err := exec.Command("docker", "rmi", "git-migrator-cli-test").Run(); err != nil {
+			t.Logf("Warning: failed to remove docker image: %v", err)
+		}
+	}()
 
 	// Run version command
 	cmd = exec.Command("docker", "run", "--rm", "git-migrator-cli-test", "version")
@@ -155,12 +165,20 @@ func TestDockerRunWeb(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Skip("Could not build image")
 	}
-	defer exec.Command("docker", "rmi", "git-migrator-web-test").Run()
+	defer func() {
+		if err := exec.Command("docker", "rmi", "git-migrator-web-test").Run(); err != nil {
+			t.Logf("Warning: failed to remove docker image: %v", err)
+		}
+	}()
 
 	// Run web command in background
 	cmd = exec.Command("docker", "run", "--rm", "-p", "18080:8080", "git-migrator-web-test", "web", "--port", "8080")
 	if err := cmd.Start(); err != nil {
 		t.Skip("Could not start web container")
 	}
-	defer cmd.Process.Kill()
+	defer func() {
+		if err := cmd.Process.Kill(); err != nil {
+			t.Logf("Warning: failed to kill process: %v", err)
+		}
+	}()
 }

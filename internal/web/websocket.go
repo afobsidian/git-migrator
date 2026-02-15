@@ -25,7 +25,11 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WebSocket upgrade error: %v", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("Warning: failed to close WebSocket connection: %v", err)
+		}
+	}()
 
 	// Send initial connection message
 	s.sendProgressEvent(conn, migrationID, "connected", "Connected to migration progress")

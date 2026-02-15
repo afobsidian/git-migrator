@@ -25,7 +25,11 @@ func CreateTempDir(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.RemoveAll(dir) })
+	t.Cleanup(func() {
+		if err := os.RemoveAll(dir); err != nil {
+			t.Logf("Warning: failed to remove temp dir %s: %v", dir, err)
+		}
+	})
 	return dir
 }
 

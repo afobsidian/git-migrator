@@ -79,6 +79,9 @@ clean:
 	@echo "Cleaning..."
 	rm -rf bin/
 	rm -f coverage.out coverage.html
+	rm -rf dist/
+	rm -f $(BINARY_NAME)
+	go clean -cache -testcache -modcache
 
 ## install: Install binary to GOPATH/bin
 install:

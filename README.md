@@ -408,7 +408,18 @@ Inspired by and built upon the shoulders of:
 
 - **Development Status:** Active development
 - **Current Version:** v0.1.0 (pre-release)
-- **Target Release:** v1.0.0 - Q1 2025
+- **Sprint Progress:** Sprint 3 complete, Sprint 4 next
+- **Target Release:** v1.0.0 - Q2 2025
+
+### Completed Sprints
+- ✅ Sprint 1: Foundation & Testing Infrastructure
+- ✅ Sprint 2: CVS Reading & RCS Parsing
+- ✅ Sprint 3: Git Writing & Commit Application
+
+### Next Up
+- 🔜 Sprint 4: Migration Integration
+
+See [Roadmap](./docs/roadmap.md) for detailed timeline.
 
 ---
 

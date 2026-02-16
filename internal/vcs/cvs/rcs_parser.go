@@ -265,8 +265,9 @@ func (p *RCSParser) parseDeltaTexts(rcs *RCSFile) {
 	for p.token.Type != TokenEOF {
 		// Revision number
 		if p.token.Type != TokenNumber {
-			// Not a revision number, skip
-			break
+			// Not a revision number, skip this token and continue looking
+			p.advance()
+			continue
 		}
 
 		rev := p.token.Value

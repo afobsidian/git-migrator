@@ -58,6 +58,7 @@ test-coverage:
 	@echo "Running tests with coverage..."
 	$(GO) test -v -coverprofile=coverage.out ./internal/... ./cmd/...
 	@echo "Generating coverage report..."
+	$(GO) tool cover -func coverage.out
 	$(GO) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 

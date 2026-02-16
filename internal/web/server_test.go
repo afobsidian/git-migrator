@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -888,4 +889,33 @@ func TestServerMultipleMigrationStopStart(t *testing.T) {
 	if m2.Status == "stopped" {
 		t.Error("Migration 2 should not be stopped")
 	}
+}
+
+func TestServerStart(t *testing.T) {
+	// Use a high port number to avoid conflicts
+	config := ServerConfig{Port: 54321}
+	server := NewServer(config)
+
+	// Start server in goroutine
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.Start()
+	}()
+
+	// Give server time to start
+	time.Sleep(100 * time.Millisecond)
+
+	// Make a test request to verify server is running
+	resp, err := http.Get("http://localhost:54321/api/health")
+	if err != nil {
+		t.Fatalf("Failed to connect to server: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Health check status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	// The server will continue running, but we've verified it started successfully
+	// In a real test, we'd have a way to shut it down gracefully
 }

@@ -55,9 +55,11 @@ func NewMigrator(config *MigrationConfig) *Migrator {
 
 // Run executes the migration
 func (m *Migrator) Run() error {
-	// Initialize source reader
-	if err := m.initSource(); err != nil {
-		return fmt.Errorf("failed to init source: %w", err)
+	// Initialize source reader (if not already set, e.g., in tests)
+	if m.source == nil {
+		if err := m.initSource(); err != nil {
+			return fmt.Errorf("failed to init source: %w", err)
+		}
 	}
 
 	// Validate source
@@ -119,7 +121,11 @@ func (m *Migrator) Run() error {
 	for i := startIdx; i < len(commits); i++ {
 		commit := commits[i]
 
-		m.reporter.SetOperation(fmt.Sprintf("Processing commit %s", commit.Revision[:8]))
+		rev := commit.Revision
+		if len(rev) > 8 {
+			rev = rev[:8]
+		}
+		m.reporter.SetOperation(fmt.Sprintf("Processing commit %s", rev))
 
 		// Map author
 		name, email := m.authorMap.Get(commit.Author)
@@ -208,6 +214,16 @@ func (m *Migrator) initTarget() error {
 }
 
 func (m *Migrator) initState() error {
+	migrationID := m.generateMigrationID()
+
+	// In dry run mode, skip database creation but still initialize in-memory state
+	if m.config.DryRun {
+		m.state = &MigrationState{
+			migrationID: migrationID,
+		}
+		return nil
+	}
+
 	if m.config.StateFile == "" {
 		m.config.StateFile = filepath.Join(m.config.TargetPath, ".migration-state.db")
 	}
@@ -217,8 +233,6 @@ func (m *Migrator) initState() error {
 		return err
 	}
 	m.db = db
-
-	migrationID := m.generateMigrationID()
 
 	// Try to load existing state
 	state, err := db.Load(migrationID)
@@ -249,6 +263,11 @@ func (m *Migrator) saveState(lastCommit string, processed, total int) error {
 	m.state.lastCommit = lastCommit
 	m.state.processed = processed
 	m.state.total = total
+
+	// Skip database operations in dry run mode
+	if m.config.DryRun {
+		return nil
+	}
 
 	state := &storage.MigrationState{
 		MigrationID: m.state.migrationID,

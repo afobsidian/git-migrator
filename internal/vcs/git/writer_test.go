@@ -749,6 +749,263 @@ func TestWriterCreateTagNoRepo(t *testing.T) {
 	}
 }
 
+func TestWriterCreateBranchWithRevision(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "branch-revision-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Get the commit hash
+	lastCommit, err := w.GetLastCommit()
+	if err != nil {
+		t.Fatalf("GetLastCommit failed: %v", err)
+	}
+
+	// Create branch using specific revision hash
+	if err := w.CreateBranch("feature2", lastCommit.Revision); err != nil {
+		t.Fatalf("CreateBranch with revision failed: %v", err)
+	}
+
+	// Verify branch exists
+	branches, err := w.ListBranches()
+	if err != nil {
+		t.Fatalf("ListBranches failed: %v", err)
+	}
+
+	found := false
+	for _, b := range branches {
+		if b == "feature2" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Branch 'feature2' not found")
+	}
+}
+
+func TestWriterCreateBranchInvalidRevision(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "branch-invalid-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Try to create branch with invalid revision
+	err = w.CreateBranch("bad-branch", "invalid-revision")
+	if err == nil {
+		t.Error("CreateBranch should fail with invalid revision")
+	}
+}
+
+func TestWriterCreateTagWithRevision(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "tag-revision-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Get the commit hash
+	lastCommit, err := w.GetLastCommit()
+	if err != nil {
+		t.Fatalf("GetLastCommit failed: %v", err)
+	}
+
+	// Create tag using specific revision hash
+	if err := w.CreateTag("v1.0.1", lastCommit.Revision, ""); err != nil {
+		t.Fatalf("CreateTag with revision failed: %v", err)
+	}
+
+	// Verify tag exists
+	tags, err := w.ListTags()
+	if err != nil {
+		t.Fatalf("ListTags failed: %v", err)
+	}
+
+	if _, ok := tags["v1.0.1"]; !ok {
+		t.Error("Tag 'v1.0.1' not found")
+	}
+}
+
+func TestWriterCreateTagInvalidRevision(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "tag-invalid-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Try to create tag with invalid revision
+	err = w.CreateTag("bad-tag", "invalid-revision", "")
+	if err == nil {
+		t.Error("CreateTag should fail with invalid revision")
+	}
+}
+
+func TestWriterCreateAnnotatedTagWithRevision(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "annotated-tag-revision-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Get the commit hash
+	lastCommit, err := w.GetLastCommit()
+	if err != nil {
+		t.Fatalf("GetLastCommit failed: %v", err)
+	}
+
+	// Create annotated tag using specific revision hash
+	if err := w.CreateTag("v1.0.2", lastCommit.Revision, "Release version 1.0.2"); err != nil {
+		t.Fatalf("CreateTag with revision failed: %v", err)
+	}
+
+	// Verify tag exists
+	tags, err := w.ListTags()
+	if err != nil {
+		t.Fatalf("ListTags failed: %v", err)
+	}
+
+	if _, ok := tags["v1.0.2"]; !ok {
+		t.Error("Tag 'v1.0.2' not found")
+	}
+}
+
 func TestWriterListBranches(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "git-writer-test")
 	if err != nil {
@@ -1191,5 +1448,282 @@ func TestWriterApplyCommitLargeContent(t *testing.T) {
 	}
 	if info.Size() != int64(len(largeContent)) {
 		t.Errorf("Large file size = %d, want %d", info.Size(), len(largeContent))
+	}
+}
+
+func TestWriterGetLastCommit_EmptyRepo(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "empty-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Try to get last commit from empty repo
+	_, err = w.GetLastCommit()
+	if err == nil {
+		t.Error("GetLastCommit should fail on empty repository")
+	}
+}
+
+func TestWriterInitWithConfig_MultipleOptions(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "multi-config-repo")
+
+	w := NewWriter()
+	config := map[string]string{
+		"user.name":  "Test User",
+		"user.email": "test@example.com",
+	}
+
+	if err := w.InitWithConfig(repoPath, config); err != nil {
+		t.Fatalf("InitWithConfig failed: %v", err)
+	}
+	defer w.Close()
+
+	// Verify configs were set
+	name, err := w.GetConfig("user.name")
+	if err != nil {
+		t.Fatalf("GetConfig(user.name) failed: %v", err)
+	}
+	if name != "Test User" {
+		t.Errorf("user.name = %q, want %q", name, "Test User")
+	}
+
+	email, err := w.GetConfig("user.email")
+	if err != nil {
+		t.Fatalf("GetConfig(user.email) failed: %v", err)
+	}
+	if email != "test@example.com" {
+		t.Errorf("user.email = %q, want %q", email, "test@example.com")
+	}
+}
+
+func TestWriterApplyCommit_DeleteNonExistentFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "delete-nonexistent-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit
+	commit1 := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit1); err != nil {
+		t.Fatalf("First ApplyCommit failed: %v", err)
+	}
+
+	// Try to delete a file that doesn't exist and add a new file
+	// This should work because there's at least one real change (the add)
+	commit2 := &vcs.Commit{
+		Revision: "rev2",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Add new file and delete nonexistent",
+		Files: []vcs.FileChange{
+			{
+				Path:   "nonexistent.txt",
+				Action: vcs.ActionDelete,
+			},
+			{
+				Path:    "newfile.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("New content"),
+			},
+		},
+	}
+	// This should succeed because there's a real file change
+	if err := w.ApplyCommit(commit2); err != nil {
+		t.Fatalf("Second ApplyCommit failed: %v", err)
+	}
+}
+
+func TestWriterCreateBranch_WithLastCommit(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "branch-lastcommit-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit (this sets w.lastCommit)
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Create branch using HEAD (should use w.lastCommit)
+	if err := w.CreateBranch("from-lastcommit", "HEAD"); err != nil {
+		t.Fatalf("CreateBranch failed: %v", err)
+	}
+
+	// Verify branch exists
+	branches, err := w.ListBranches()
+	if err != nil {
+		t.Fatalf("ListBranches failed: %v", err)
+	}
+
+	found := false
+	for _, b := range branches {
+		if b == "from-lastcommit" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Branch 'from-lastcommit' not found")
+	}
+}
+
+func TestWriterCreateTag_WithLastCommit(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "tag-lastcommit-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit (this sets w.lastCommit)
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Create tag using HEAD (should use w.lastCommit)
+	if err := w.CreateTag("v1.0.0", "HEAD", ""); err != nil {
+		t.Fatalf("CreateTag failed: %v", err)
+	}
+
+	// Verify tag exists
+	tags, err := w.ListTags()
+	if err != nil {
+		t.Fatalf("ListTags failed: %v", err)
+	}
+
+	if _, ok := tags["v1.0.0"]; !ok {
+		t.Error("Tag 'v1.0.0' not found")
+	}
+}
+
+func TestWriterCreateAnnotatedTag_WithLastCommit(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "git-writer-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	repoPath := filepath.Join(tmpDir, "annotated-tag-lastcommit-repo")
+
+	w := NewWriter()
+	if err := w.Init(repoPath); err != nil {
+		t.Fatalf("Init failed: %v", err)
+	}
+	defer w.Close()
+
+	// Create initial commit (this sets w.lastCommit)
+	commit := &vcs.Commit{
+		Revision: "rev1",
+		Author:   "Test",
+		Email:    "test@example.com",
+		Date:     time.Now(),
+		Message:  "Initial commit",
+		Files: []vcs.FileChange{
+			{
+				Path:    "file.txt",
+				Action:  vcs.ActionAdd,
+				Content: []byte("Content"),
+			},
+		},
+	}
+	if err := w.ApplyCommit(commit); err != nil {
+		t.Fatalf("ApplyCommit failed: %v", err)
+	}
+
+	// Create annotated tag using HEAD (should use w.lastCommit)
+	if err := w.CreateTag("v1.0.0", "HEAD", "Release version 1.0.0"); err != nil {
+		t.Fatalf("CreateTag failed: %v", err)
+	}
+
+	// Verify tag exists
+	tags, err := w.ListTags()
+	if err != nil {
+		t.Fatalf("ListTags failed: %v", err)
+	}
+
+	if _, ok := tags["v1.0.0"]; !ok {
+		t.Error("Tag 'v1.0.0' not found")
 	}
 }

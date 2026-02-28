@@ -480,7 +480,7 @@ func TestParserSkipSemicolon(t *testing.T) {
 	input := "head 1.5;;;" // Multiple semicolons
 	parser := NewRCSParser(strings.NewReader(input))
 
-	parser.Parse()
+	_, _ = parser.Parse()
 
 	// Should not panic - skipSemicolon handles this gracefully
 }

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/adamf123git/git-migrator/internal/vcs"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewMigrator(t *testing.T) {
@@ -110,7 +110,7 @@ func TestMigratorInitSourceCVS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	// Create minimal CVS structure
 	cvsroot := filepath.Join(tmpDir, "CVSROOT")
@@ -140,7 +140,7 @@ func TestMigratorInitTargetNew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "new-repo")
 
@@ -165,7 +165,7 @@ func TestMigratorInitTargetNew(t *testing.T) {
 		t.Error(".git directory should exist")
 	}
 
-	m.target.Close()
+	require.NoError(t, m.target.Close())
 }
 
 func TestMigratorInitTargetExisting(t *testing.T) {
@@ -173,7 +173,7 @@ func TestMigratorInitTargetExisting(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "existing-repo")
 
@@ -189,7 +189,7 @@ func TestMigratorInitTargetExisting(t *testing.T) {
 	if err := m.initTarget(); err != nil {
 		t.Fatalf("First initTarget failed: %v", err)
 	}
-	m.target.Close()
+	require.NoError(t, m.target.Close())
 
 	// Reset target
 	m.target = nil
@@ -204,7 +204,7 @@ func TestMigratorInitTargetExisting(t *testing.T) {
 		t.Error("target should be initialized")
 	}
 
-	m.target.Close()
+	require.NoError(t, m.target.Close())
 }
 
 func TestMigratorGenerateMigrationID(t *testing.T) {
@@ -243,7 +243,7 @@ func TestMigratorInitState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.db")
 
@@ -267,7 +267,7 @@ func TestMigratorInitState(t *testing.T) {
 		t.Error("state should be initialized")
 	}
 
-	m.db.Close()
+	require.NoError(t, m.db.Close())
 }
 
 func TestMigratorInitStateDefaultPath(t *testing.T) {
@@ -275,7 +275,7 @@ func TestMigratorInitStateDefaultPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	targetPath := filepath.Join(tmpDir, "target")
 
@@ -296,7 +296,7 @@ func TestMigratorInitStateDefaultPath(t *testing.T) {
 		t.Errorf("StateFile = %q, want %q", m.config.StateFile, expectedStateFile)
 	}
 
-	m.db.Close()
+	require.NoError(t, m.db.Close())
 }
 
 func TestSimpleStateSave(t *testing.T) {
@@ -304,7 +304,7 @@ func TestSimpleStateSave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.txt")
 	s := NewMigrationState(stateFile)
@@ -330,7 +330,7 @@ func TestSimpleStateLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.txt")
 	s := NewMigrationState(stateFile)
@@ -382,7 +382,7 @@ func TestSimpleStateClear(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.txt")
 	s := NewMigrationState(stateFile)
@@ -436,7 +436,7 @@ func TestSimpleStateInvalidFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "invalid-state.txt")
 
@@ -457,7 +457,7 @@ func TestSimpleStatePartialFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "partial-state.txt")
 
@@ -586,64 +586,13 @@ func TestMigrationConfigInterruptAt(t *testing.T) {
 	}
 }
 
-// mockVCSReader implements vcs.VCSReader for testing
-type mockVCSReader struct {
-	validateErr error
-	commits     []*vcs.Commit
-	branches    []string
-	tags        map[string]string
-}
-
-func (m *mockVCSReader) Validate() error {
-	return m.validateErr
-}
-
-func (m *mockVCSReader) GetCommits() (vcs.CommitIterator, error) {
-	return &mockCommitIterator{commits: m.commits}, nil
-}
-
-func (m *mockVCSReader) GetBranches() ([]string, error) {
-	return m.branches, nil
-}
-
-func (m *mockVCSReader) GetTags() (map[string]string, error) {
-	return m.tags, nil
-}
-
-func (m *mockVCSReader) Close() error {
-	return nil
-}
-
-// mockCommitIterator implements vcs.CommitIterator for testing
-type mockCommitIterator struct {
-	commits []*vcs.Commit
-	index   int
-	err     error
-}
-
-func (i *mockCommitIterator) Next() bool {
-	i.index++
-	return i.index <= len(i.commits)
-}
-
-func (i *mockCommitIterator) Commit() *vcs.Commit {
-	if i.index < 1 || i.index > len(i.commits) {
-		return nil
-	}
-	return i.commits[i.index-1]
-}
-
-func (i *mockCommitIterator) Err() error {
-	return i.err
-}
-
 func TestMigratorRunDryRun(t *testing.T) {
 	// This test verifies that dry run mode doesn't create files
 	tmpDir, err := os.MkdirTemp("", "dry-run-test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	targetPath := filepath.Join(tmpDir, "target")
 
@@ -678,7 +627,7 @@ func TestMigratorSaveState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.db")
 
@@ -694,7 +643,7 @@ func TestMigratorSaveState(t *testing.T) {
 	if err := m.initState(); err != nil {
 		t.Fatalf("initState failed: %v", err)
 	}
-	defer m.db.Close()
+	defer func() { require.NoError(t, m.db.Close()) }()
 
 	// Save state
 	err = m.saveState("commit123", 50, 100)
@@ -719,7 +668,7 @@ func TestSimpleStateSaveAndLoadMultiple(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.txt")
 	s := NewMigrationState(stateFile)
@@ -753,7 +702,7 @@ func TestSimpleStateConcurrentAccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.txt")
 	s := NewMigrationState(stateFile)
@@ -791,7 +740,7 @@ func TestMigratorStateWithResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.db")
 
@@ -814,14 +763,14 @@ func TestMigratorStateWithResume(t *testing.T) {
 		t.Fatalf("saveState failed: %v", err)
 	}
 
-	m.db.Close()
+	require.NoError(t, m.db.Close())
 
 	// Create new migrator and resume
 	m2 := NewMigrator(config)
 	if err := m2.initState(); err != nil {
 		t.Fatalf("second initState failed: %v", err)
 	}
-	defer m2.db.Close()
+	defer func() { require.NoError(t, m2.db.Close()) }()
 
 	// State should be loaded
 	if m2.state == nil {
@@ -838,7 +787,7 @@ func TestMigratorStateWithoutResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.db")
 
@@ -861,14 +810,14 @@ func TestMigratorStateWithoutResume(t *testing.T) {
 		t.Fatalf("saveState failed: %v", err)
 	}
 
-	m.db.Close()
+	require.NoError(t, m.db.Close())
 
 	// Create new migrator without resume
 	m2 := NewMigrator(config)
 	if err := m2.initState(); err != nil {
 		t.Fatalf("second initState failed: %v", err)
 	}
-	defer m2.db.Close()
+	defer func() { require.NoError(t, m2.db.Close()) }()
 
 	// State should be fresh (not loaded)
 	if m2.state.lastCommit != "" {
@@ -884,7 +833,7 @@ func TestSimpleStateWithLargeNumbers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	stateFile := filepath.Join(tmpDir, "state.txt")
 	s := NewMigrationState(stateFile)

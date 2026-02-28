@@ -20,7 +20,7 @@ func TestWebSocket_NotFound(t *testing.T) {
 	dialer := websocket.Dialer{HandshakeTimeout: 2 * time.Second}
 	conn, resp, err := dialer.Dial(url, nil)
 	if conn != nil {
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 	}
 	// The server upgrades then sends connected and error, connection may close
 	if err != nil {
@@ -50,7 +50,7 @@ func TestSendJSONAndProgressHelpers(t *testing.T) {
 		if err != nil {
 			return
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		// Create a migration status and send full progress
 		ms := &MigrationStatus{ID: "mid", Status: "running", Percentage: 10, CurrentStep: "step", TotalCommits: 5, ProcessedCommits: 1, Errors: []string{}}
@@ -63,7 +63,7 @@ func TestSendJSONAndProgressHelpers(t *testing.T) {
 	dialer := websocket.Dialer{HandshakeTimeout: 2 * time.Second}
 	conn, resp, err := dialer.Dial(url, nil)
 	if conn != nil {
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 	}
 	if err != nil {
 		require.NotNil(t, resp)

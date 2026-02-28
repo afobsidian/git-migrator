@@ -109,7 +109,7 @@ func TestMarkCompleteAndSaveState(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "state.db")
 	sdb, err := storage.NewStateDB(dbPath)
 	require.NoError(t, err)
-	defer sdb.Close()
+	defer func() { require.NoError(t, sdb.Close()) }()
 
 	m := &Migrator{
 		config:   &MigrationConfig{SourcePath: "/src", TargetPath: "/t"},

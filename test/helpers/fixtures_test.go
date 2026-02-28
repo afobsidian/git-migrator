@@ -21,7 +21,7 @@ func TestCreateTempDirAndLoadFixture(t *testing.T) {
 	// Temporarily change working dir
 	oldwd, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(oldwd)
+	defer func() { require.NoError(t, os.Chdir(oldwd)) }()
 
 	data := LoadFixture(t, "a.txt")
 	require.Equal(t, []byte("x"), data)

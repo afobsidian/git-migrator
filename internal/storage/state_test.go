@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewStateDB(t *testing.T) {
@@ -12,14 +14,14 @@ func TestNewStateDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Check that the database file was created
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -32,7 +34,7 @@ func TestNewStateDBCreatesParentDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	// Use a nested directory that doesn't exist
 	dbPath := filepath.Join(tmpDir, "nested", "deep", "test.db")
@@ -40,7 +42,7 @@ func TestNewStateDBCreatesParentDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Check that the parent directory was created
 	parentDir := filepath.Dir(dbPath)
@@ -50,9 +52,12 @@ func TestNewStateDBCreatesParentDir(t *testing.T) {
 }
 
 func TestNewStateDBInvalidPath(t *testing.T) {
-	// Try to create a database in a path that can't be created
-	// For example, trying to create under /proc which should fail
-	_, err := NewStateDB("/proc/nonexistent/test.db")
+	// Create a temp file, then try to use it as a directory - fails on all platforms
+	tmpFile := filepath.Join(t.TempDir(), "notadir")
+	if err := os.WriteFile(tmpFile, []byte("x"), 0644); err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	_, err := NewStateDB(filepath.Join(tmpFile, "sub", "test.db"))
 	if err == nil {
 		t.Error("NewStateDB should fail with invalid path")
 	}
@@ -63,14 +68,14 @@ func TestStateDBSave(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	state := &MigrationState{
 		MigrationID: "test-migration-1",
@@ -92,14 +97,14 @@ func TestStateDBSaveAndUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save initial state
 	state := &MigrationState{
@@ -141,14 +146,14 @@ func TestStateDBLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save a state first
 	state := &MigrationState{
@@ -201,14 +206,14 @@ func TestStateDBLoadNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Try to load a non-existent migration
 	_, err = db.Load("nonexistent")
@@ -222,14 +227,14 @@ func TestStateDBComplete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save a state first
 	state := &MigrationState{
@@ -266,14 +271,14 @@ func TestStateDBCompleteNonExistent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Complete on non-existent migration should not fail (UPDATE just affects 0 rows)
 	if err := db.Complete("nonexistent"); err != nil {
@@ -286,14 +291,14 @@ func TestStateDBDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save a state first
 	state := &MigrationState{
@@ -326,14 +331,14 @@ func TestStateDBDeleteNonExistent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Delete on non-existent should not fail
 	if err := db.Delete("nonexistent"); err != nil {
@@ -346,14 +351,14 @@ func TestStateDBHistory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save multiple states
 	states := []*MigrationState{
@@ -419,14 +424,14 @@ func TestStateDBHistoryEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Get history from empty database
 	history, err := db.History()
@@ -445,7 +450,7 @@ func TestStateDBClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
@@ -467,14 +472,14 @@ func TestStateDBSaveSetsTimestamp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	before := time.Now()
 	time.Sleep(1 * time.Millisecond)
@@ -511,14 +516,14 @@ func TestStateDBConcurrentAccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Create initial states
 	for i := 0; i < 5; i++ {
@@ -575,14 +580,14 @@ func TestStateDBEmptyStrings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save with empty string fields
 	state := &MigrationState{
@@ -622,14 +627,14 @@ func TestStateDBZeroValues(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save with zero numeric values
 	state := &MigrationState{
@@ -663,14 +668,14 @@ func TestStateDBLargeValues(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := NewStateDB(dbPath)
 	if err != nil {
 		t.Fatalf("NewStateDB failed: %v", err)
 	}
-	defer db.Close()
+	defer func() { require.NoError(t, db.Close()) }()
 
 	// Save with large numeric values
 	state := &MigrationState{

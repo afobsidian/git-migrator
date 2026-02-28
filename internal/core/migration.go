@@ -84,6 +84,13 @@ func (m *Migrator) Run() error {
 	if err := m.initState(); err != nil {
 		return fmt.Errorf("failed to init state: %w", err)
 	}
+	if m.db != nil {
+		defer func() {
+			if err := m.db.Close(); err != nil {
+				log.Printf("Warning: failed to close state db: %v", err)
+			}
+		}()
+	}
 
 	// Get commits from source
 	iter, err := m.source.GetCommits()

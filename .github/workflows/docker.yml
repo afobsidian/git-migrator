@@ -16,6 +16,8 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+    outputs:
+      image-digest: ${{ steps.build-and-push.outputs.digest }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -72,13 +74,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Pull and test image
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build.outputs.image-digest }}"
+          docker pull "$IMAGE"
           # Test version command
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} version
+          docker run --rm "$IMAGE" version
           # Test help command
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --help
+          docker run --rm "$IMAGE" --help
           # Test web command starts successfully
-          timeout 10s docker run --rm -p 18080:8080 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} web --port 8080 &
+          timeout 10s docker run --rm -p 18080:8080 "$IMAGE" web --port 8080 &
           sleep 5
           curl -f http://localhost:18080/api/health || exit 1
           echo "✅ Docker image tests passed!"
+

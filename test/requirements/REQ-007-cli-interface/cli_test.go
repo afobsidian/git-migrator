@@ -21,7 +21,11 @@ func TestMain(m *testing.M) {
 	testDir := filepath.Dir(filename)
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(testDir)))
 
-	binaryPath = filepath.Join("/tmp", "git-migrator-cli-test")
+	binaryName := "git-migrator-cli-test"
+	if runtime.GOOS == "windows" {
+		binaryName += ".exe"
+	}
+	binaryPath = filepath.Join(os.TempDir(), binaryName)
 
 	// Build the binary
 	cmd := exec.Command("go", "build", "-o", binaryPath, "./cmd/git-migrator")

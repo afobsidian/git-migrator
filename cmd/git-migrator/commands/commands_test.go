@@ -73,7 +73,42 @@ func TestPrintMigrationInfo_DoesNotPanic(t *testing.T) {
 	// Restore stdout
 	_ = w.Close()
 	os.Stdout = orig
-	buf.ReadFrom(r)
+	_, readErr := buf.ReadFrom(r)
+	require.NoError(t, readErr)
+	_ = r.Close()
+}
+
+func TestPrintMigrationInfo_AllFields(t *testing.T) {
+	orig := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cfg := &ConfigFile{}
+	cfg.Source.Type = "cvs"
+	cfg.Source.Path = "/src"
+	cfg.Source.Module = "mymodule"
+	cfg.Target.Path = "/t"
+	cfg.Target.Remote = "https://github.com/example/repo"
+	cfg.Options.DryRun = true
+	cfg.Options.Verbose = true
+	cfg.Mapping.Authors = map[string]string{"user": "User <user@example.com>"}
+	cfg.Mapping.Branches = map[string]string{"main": "master"}
+	cfg.Mapping.Tags = map[string]string{"v1.0": "release-1.0"}
+
+	mig := &core.MigrationConfig{SourcePath: "/src", TargetPath: "/t"}
+
+	printMigrationInfo(cfg, mig)
+
+	_ = w.Close()
+	os.Stdout = orig
+
+	buf := &bytes.Buffer{}
+	_, readErr := buf.ReadFrom(r)
+	require.NoError(t, readErr)
+	_ = r.Close()
+	output := buf.String()
+	require.Contains(t, output, "mymodule")
+	require.Contains(t, output, "https://github.com/example/repo")
 }
 
 func TestRunAnalyze_InvalidType(t *testing.T) {

@@ -20,7 +20,7 @@ func TestSendJSON_MarshalError(t *testing.T) {
 		if err != nil {
 			return
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		// Attempt to send a bad type
 		s.sendJSON(conn, badType{})
@@ -33,7 +33,7 @@ func TestSendJSON_MarshalError(t *testing.T) {
 		require.NotNil(t, resp)
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// server will attempt to write but since marshal fails, no message expected; ensure no panic
 }

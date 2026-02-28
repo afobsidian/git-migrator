@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/adamf123git/git-migrator/internal/vcs"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewWriter(t *testing.T) {
@@ -21,7 +22,7 @@ func TestWriterInit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "test-repo")
 
@@ -29,7 +30,7 @@ func TestWriterInit(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Check that .git directory was created
 	gitDir := filepath.Join(repoPath, ".git")
@@ -53,7 +54,7 @@ func TestWriterInitExistingPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "existing-dir")
 
@@ -66,7 +67,7 @@ func TestWriterInitExistingPath(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed on existing path: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 }
 
 func TestWriterInitNestedPath(t *testing.T) {
@@ -74,7 +75,7 @@ func TestWriterInitNestedPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "nested", "deep", "repo")
 
@@ -82,7 +83,7 @@ func TestWriterInitNestedPath(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed on nested path: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Check that all directories were created
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
@@ -95,7 +96,7 @@ func TestWriterInitWithConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "config-repo")
 
@@ -108,7 +109,7 @@ func TestWriterInitWithConfig(t *testing.T) {
 	if err := w.InitWithConfig(repoPath, config); err != nil {
 		t.Fatalf("InitWithConfig failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Verify config was set
 	name, err := w.GetConfig("user.name")
@@ -133,7 +134,7 @@ func TestWriterSetConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "setconfig-repo")
 
@@ -141,7 +142,7 @@ func TestWriterSetConfig(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Set user.name
 	if err := w.SetConfig("user.name", "New User"); err != nil {
@@ -194,7 +195,7 @@ func TestWriterGetConfigUnknownKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "unknownkey-repo")
 
@@ -202,7 +203,7 @@ func TestWriterGetConfigUnknownKey(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	_, err = w.GetConfig("unknown.key")
 	if err == nil {
@@ -215,7 +216,7 @@ func TestWriterIsRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "isrepo-repo")
 
@@ -223,7 +224,7 @@ func TestWriterIsRepo(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Should be a repo
 	if !w.IsRepo(repoPath) {
@@ -250,7 +251,7 @@ func TestWriterOpen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "open-repo")
 
@@ -259,14 +260,14 @@ func TestWriterOpen(t *testing.T) {
 	if err := w1.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	w1.Close()
+	require.NoError(t, w1.Close())
 
 	// Open existing repo
 	w2 := NewWriter()
 	if err := w2.Open(repoPath); err != nil {
 		t.Fatalf("Open failed: %v", err)
 	}
-	defer w2.Close()
+	defer func() { require.NoError(t, w2.Close()) }()
 }
 
 func TestWriterOpenNonExistent(t *testing.T) {
@@ -283,7 +284,7 @@ func TestWriterApplyCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "commit-repo")
 
@@ -291,7 +292,7 @@ func TestWriterApplyCommit(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	commit := &vcs.Commit{
 		Revision: "rev1",
@@ -346,7 +347,7 @@ func TestWriterApplyCommitModifyFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "modify-repo")
 
@@ -354,7 +355,7 @@ func TestWriterApplyCommitModifyFile(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// First commit - add file
 	commit1 := &vcs.Commit{
@@ -409,7 +410,7 @@ func TestWriterApplyCommitDeleteFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "delete-repo")
 
@@ -417,7 +418,7 @@ func TestWriterApplyCommitDeleteFile(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// First commit - add file
 	commit1 := &vcs.Commit{
@@ -468,7 +469,7 @@ func TestWriterApplyCommitNestedPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "nested-repo")
 
@@ -476,7 +477,7 @@ func TestWriterApplyCommitNestedPath(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	commit := &vcs.Commit{
 		Revision: "rev1",
@@ -513,7 +514,7 @@ func TestWriterApplyCommitMultipleFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "multifile-repo")
 
@@ -521,7 +522,7 @@ func TestWriterApplyCommitMultipleFiles(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	commit := &vcs.Commit{
 		Revision: "rev1",
@@ -579,7 +580,7 @@ func TestWriterCreateBranch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "branch-repo")
 
@@ -587,7 +588,7 @@ func TestWriterCreateBranch(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -645,7 +646,7 @@ func TestWriterCreateTag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "tag-repo")
 
@@ -653,7 +654,7 @@ func TestWriterCreateTag(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -695,7 +696,7 @@ func TestWriterCreateAnnotatedTag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "annotated-tag-repo")
 
@@ -703,7 +704,7 @@ func TestWriterCreateAnnotatedTag(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -754,7 +755,7 @@ func TestWriterCreateBranchWithRevision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "branch-revision-repo")
 
@@ -762,7 +763,7 @@ func TestWriterCreateBranchWithRevision(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -817,7 +818,7 @@ func TestWriterCreateBranchInvalidRevision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "branch-invalid-repo")
 
@@ -825,7 +826,7 @@ func TestWriterCreateBranchInvalidRevision(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -858,7 +859,7 @@ func TestWriterCreateTagWithRevision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "tag-revision-repo")
 
@@ -866,7 +867,7 @@ func TestWriterCreateTagWithRevision(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -914,7 +915,7 @@ func TestWriterCreateTagInvalidRevision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "tag-invalid-repo")
 
@@ -922,7 +923,7 @@ func TestWriterCreateTagInvalidRevision(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -955,7 +956,7 @@ func TestWriterCreateAnnotatedTagWithRevision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "annotated-tag-revision-repo")
 
@@ -963,7 +964,7 @@ func TestWriterCreateAnnotatedTagWithRevision(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit := &vcs.Commit{
@@ -1011,7 +1012,7 @@ func TestWriterListBranches(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "list-branches-repo")
 
@@ -1019,7 +1020,7 @@ func TestWriterListBranches(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Initial list - nil slice is valid for empty in Go (len(nil slice) == 0)
 	branches, err := w.ListBranches()
@@ -1044,7 +1045,7 @@ func TestWriterListTags(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "list-tags-repo")
 
@@ -1052,7 +1053,7 @@ func TestWriterListTags(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Initial list should be empty
 	tags, err := w.ListTags()
@@ -1078,7 +1079,7 @@ func TestWriterGetLastCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "last-commit-repo")
 
@@ -1086,7 +1087,7 @@ func TestWriterGetLastCommit(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create a commit
 	commit := &vcs.Commit{
@@ -1138,7 +1139,7 @@ func TestWriterGetCommitHashes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "hashes-repo")
 
@@ -1146,7 +1147,7 @@ func TestWriterGetCommitHashes(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create multiple commits
 	for i := 0; i < 3; i++ {
@@ -1201,7 +1202,7 @@ func TestWriterResolveRevision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "resolve-repo")
 
@@ -1209,7 +1210,7 @@ func TestWriterResolveRevision(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create a commit
 	commit := &vcs.Commit{
@@ -1245,7 +1246,7 @@ func TestWriterResolveRevisionHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "resolve-hash-repo")
 
@@ -1253,7 +1254,7 @@ func TestWriterResolveRevisionHash(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Pass a 40-character hash directly
 	fakeHash := "0123456789012345678901234567890123456789"
@@ -1280,7 +1281,7 @@ func TestWriterClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "close-repo")
 
@@ -1314,7 +1315,7 @@ func TestWriterApplyCommitEmptyFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "empty-files-repo")
 
@@ -1322,7 +1323,7 @@ func TestWriterApplyCommitEmptyFiles(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create a commit with empty file content
 	commit := &vcs.Commit{
@@ -1360,7 +1361,7 @@ func TestWriterApplyCommitBinaryContent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "binary-repo")
 
@@ -1368,7 +1369,7 @@ func TestWriterApplyCommitBinaryContent(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create a commit with binary content
 	binaryContent := []byte{0x00, 0x01, 0x02, 0xFF, 0xFE, 0xFD}
@@ -1406,7 +1407,7 @@ func TestWriterApplyCommitLargeContent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "large-repo")
 
@@ -1414,7 +1415,7 @@ func TestWriterApplyCommitLargeContent(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create a commit with large content
 	largeContent := make([]byte, 1024*1024) // 1MB
@@ -1456,7 +1457,7 @@ func TestWriterGetLastCommit_EmptyRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "empty-repo")
 
@@ -1464,7 +1465,7 @@ func TestWriterGetLastCommit_EmptyRepo(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Try to get last commit from empty repo
 	_, err = w.GetLastCommit()
@@ -1478,7 +1479,7 @@ func TestWriterInitWithConfig_MultipleOptions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "multi-config-repo")
 
@@ -1491,7 +1492,7 @@ func TestWriterInitWithConfig_MultipleOptions(t *testing.T) {
 	if err := w.InitWithConfig(repoPath, config); err != nil {
 		t.Fatalf("InitWithConfig failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Verify configs were set
 	name, err := w.GetConfig("user.name")
@@ -1516,7 +1517,7 @@ func TestWriterApplyCommit_DeleteNonExistentFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "delete-nonexistent-repo")
 
@@ -1524,7 +1525,7 @@ func TestWriterApplyCommit_DeleteNonExistentFile(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit
 	commit1 := &vcs.Commit{
@@ -1576,7 +1577,7 @@ func TestWriterCreateBranch_WithLastCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "branch-lastcommit-repo")
 
@@ -1584,7 +1585,7 @@ func TestWriterCreateBranch_WithLastCommit(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit (this sets w.lastCommit)
 	commit := &vcs.Commit{
@@ -1633,7 +1634,7 @@ func TestWriterCreateTag_WithLastCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "tag-lastcommit-repo")
 
@@ -1641,7 +1642,7 @@ func TestWriterCreateTag_WithLastCommit(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit (this sets w.lastCommit)
 	commit := &vcs.Commit{
@@ -1683,7 +1684,7 @@ func TestWriterCreateAnnotatedTag_WithLastCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { require.NoError(t, os.RemoveAll(tmpDir)) }()
 
 	repoPath := filepath.Join(tmpDir, "annotated-tag-lastcommit-repo")
 
@@ -1691,7 +1692,7 @@ func TestWriterCreateAnnotatedTag_WithLastCommit(t *testing.T) {
 	if err := w.Init(repoPath); err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer w.Close()
+	defer func() { require.NoError(t, w.Close()) }()
 
 	// Create initial commit (this sets w.lastCommit)
 	commit := &vcs.Commit{

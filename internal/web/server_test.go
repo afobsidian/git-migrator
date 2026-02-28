@@ -724,7 +724,7 @@ func TestServerMigrationStatusFields(t *testing.T) {
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	var response APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &response)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
 	data := response.Data.(map[string]interface{})
 	migrationID := data["id"].(string)
 
@@ -736,7 +736,7 @@ func TestServerMigrationStatusFields(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 
 	var getResponse APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &getResponse)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &getResponse))
 
 	migrationData := getResponse.Data.(map[string]interface{})
 
@@ -759,7 +759,7 @@ func TestServerErrorResponseType(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	var response APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &response)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
 
 	if response.Error == nil {
 		t.Fatal("Error should not be nil")
@@ -859,7 +859,7 @@ func TestServerMultipleMigrationStopStart(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	var response1 APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &response1)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response1))
 	id1 := response1.Data.(map[string]interface{})["id"].(string)
 
 	// Create second migration
@@ -869,7 +869,7 @@ func TestServerMultipleMigrationStopStart(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	var response2 APIResponse
-	json.Unmarshal(rec.Body.Bytes(), &response2)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response2))
 	id2 := response2.Data.(map[string]interface{})["id"].(string)
 
 	// Stop first migration
@@ -910,7 +910,7 @@ func TestServerStart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to server: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { require.NoError(t, resp.Body.Close()) }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Health check status = %d, want %d", resp.StatusCode, http.StatusOK)

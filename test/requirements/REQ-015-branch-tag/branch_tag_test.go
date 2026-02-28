@@ -242,7 +242,7 @@ func TestListTags(t *testing.T) {
 
 // setupTestRepoWithCommit creates a repo with a single commit
 func setupTestRepoWithCommit(t *testing.T) (*git.Writer, string) {
-	tmpDir, err := os.MkdirTemp("", "git-migrator-test-*")
+	tmpDir, err := os.MkdirTemp(t.TempDir(), "git-migrator-test-*")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -282,7 +282,7 @@ func setupTestRepoWithCommit(t *testing.T) (*git.Writer, string) {
 
 // setupTestRepoWithCommits creates a repo with multiple commits
 func setupTestRepoWithCommits(t *testing.T, count int) (*git.Writer, string) {
-	tmpDir, err := os.MkdirTemp("", "git-migrator-test-*")
+	tmpDir, err := os.MkdirTemp(t.TempDir(), "git-migrator-test-*")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}

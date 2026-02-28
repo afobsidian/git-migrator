@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,10 @@ func TestDockerComposeExists(t *testing.T) {
 func TestDockerfileBuild(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping Docker build test in short mode")
+	}
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker build test on Windows: Linux images cannot be built with Windows container mode")
 	}
 
 	// Check if Docker is available

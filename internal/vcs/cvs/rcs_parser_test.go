@@ -480,9 +480,10 @@ func TestParserSkipSemicolon(t *testing.T) {
 	input := "head 1.5;;;" // Multiple semicolons
 	parser := NewRCSParser(strings.NewReader(input))
 
-	_, _ = parser.Parse()
-
-	// Should not panic - skipSemicolon handles this gracefully
+	_, err := parser.Parse()
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
 }
 
 func TestParserUnknownHeaderField(t *testing.T) {

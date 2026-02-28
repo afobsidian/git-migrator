@@ -75,6 +75,7 @@ func TestPrintMigrationInfo_DoesNotPanic(t *testing.T) {
 	os.Stdout = orig
 	_, readErr := buf.ReadFrom(r)
 	require.NoError(t, readErr)
+	_ = r.Close()
 }
 
 func TestPrintMigrationInfo_AllFields(t *testing.T) {
@@ -104,6 +105,7 @@ func TestPrintMigrationInfo_AllFields(t *testing.T) {
 	buf := &bytes.Buffer{}
 	_, readErr := buf.ReadFrom(r)
 	require.NoError(t, readErr)
+	_ = r.Close()
 	output := buf.String()
 	require.Contains(t, output, "mymodule")
 	require.Contains(t, output, "https://github.com/example/repo")

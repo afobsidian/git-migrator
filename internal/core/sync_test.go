@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -396,11 +397,24 @@ func TestSyncerBidirectional_CVSEmptyGitDryRun(t *testing.T) {
 // syncGitToCVS by providing a fake cvs binary that always exits successfully.
 func TestSyncerSyncGitToCVS_WithFakeCVS(t *testing.T) {
 	binDir := t.TempDir()
-	fakeCVS := filepath.Join(binDir, "cvs")
-	require.NoError(t, os.WriteFile(fakeCVS, []byte("#!/bin/sh\nexit 0\n"), 0755))
+
+	// Create a fake cvs binary that is appropriate for the current OS.
+	var fakeCVSName string
+	var fakeCVSContent []byte
+	var pathSep string
+	if runtime.GOOS == "windows" {
+		fakeCVSName = filepath.Join(binDir, "cvs.bat")
+		fakeCVSContent = []byte("@echo off\r\nexit /b 0\r\n")
+		pathSep = ";"
+	} else {
+		fakeCVSName = filepath.Join(binDir, "cvs")
+		fakeCVSContent = []byte("#!/bin/sh\nexit 0\n")
+		pathSep = ":"
+	}
+	require.NoError(t, os.WriteFile(fakeCVSName, fakeCVSContent, 0755))
 
 	// Prepend fake binary dir to PATH (t.Setenv restores it automatically)
-	t.Setenv("PATH", binDir+":"+os.Getenv("PATH"))
+	t.Setenv("PATH", binDir+pathSep+os.Getenv("PATH"))
 
 	gitDir := createTestGitRepo(t)
 	workDir := t.TempDir()

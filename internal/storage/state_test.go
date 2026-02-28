@@ -52,9 +52,12 @@ func TestNewStateDBCreatesParentDir(t *testing.T) {
 }
 
 func TestNewStateDBInvalidPath(t *testing.T) {
-	// Try to create a database in a path that can't be created
-	// For example, trying to create under /proc which should fail
-	_, err := NewStateDB("/proc/nonexistent/test.db")
+	// Create a temp file, then try to use it as a directory - fails on all platforms
+	tmpFile := filepath.Join(t.TempDir(), "notadir")
+	if err := os.WriteFile(tmpFile, []byte("x"), 0644); err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	_, err := NewStateDB(filepath.Join(tmpFile, "sub", "test.db"))
 	if err == nil {
 		t.Error("NewStateDB should fail with invalid path")
 	}

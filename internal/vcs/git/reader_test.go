@@ -333,3 +333,53 @@ func TestGitReaderGetTags_Invalid(t *testing.T) {
 		t.Error("GetTags() should fail on non-existent path")
 	}
 }
+
+// TestGitReaderGetHeadRevision verifies that GetHeadRevision returns the SHA
+// of the current HEAD commit for a valid repository.
+func TestGitReaderGetHeadRevision(t *testing.T) {
+	dir := createTestRepo(t, []struct {
+		file    string
+		content string
+		message string
+	}{
+		{"a.txt", "a", "initial commit"},
+	})
+
+	r := NewReader(dir)
+	rev, err := r.GetHeadRevision()
+	require.NoError(t, err)
+	if len(rev) != 40 {
+		t.Errorf("GetHeadRevision() returned %q, want a 40-char SHA", rev)
+	}
+}
+
+// TestGitReaderGetHeadRevision_Invalid verifies that GetHeadRevision returns
+// an error when the repository path is invalid.
+func TestGitReaderGetHeadRevision_Invalid(t *testing.T) {
+	r := NewReader("/nonexistent/path/12345")
+	_, err := r.GetHeadRevision()
+	if err == nil {
+		t.Error("GetHeadRevision() should fail on non-existent path")
+	}
+}
+
+// TestGitReaderGetHeadRevision_PreValidated verifies that GetHeadRevision
+// works correctly when Validate has already been called (r.repo != nil).
+func TestGitReaderGetHeadRevision_PreValidated(t *testing.T) {
+	dir := createTestRepo(t, []struct {
+		file    string
+		content string
+		message string
+	}{
+		{"b.txt", "b", "first commit"},
+	})
+
+	r := NewReader(dir)
+	require.NoError(t, r.Validate())
+
+	rev, err := r.GetHeadRevision()
+	require.NoError(t, err)
+	if len(rev) != 40 {
+		t.Errorf("GetHeadRevision() returned %q, want a 40-char SHA", rev)
+	}
+}

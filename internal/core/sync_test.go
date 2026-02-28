@@ -434,6 +434,7 @@ func TestSyncerSyncGitToCVS_WithFakeCVS(t *testing.T) {
 	err := s.Run()
 	require.NoError(t, err, "syncGitToCVS with fake cvs should succeed")
 }
+// TestSyncerRun_LoadStateError verifies that Run returns an error when the
 // state file is corrupt/unreadable.
 func TestSyncerRun_LoadStateError(t *testing.T) {
 	dir := t.TempDir()
@@ -465,6 +466,7 @@ func TestSyncerRun_BidirectionalCVSError(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "cvs-to-git sync failed")
 }
+// TestSyncerSyncCVSToGit_NonDryRun_GitOpenFails verifies that the Git
 // repository cannot be opened in non-dry-run mode (lines after the dry-run check).
 func TestSyncerSyncCVSToGit_NonDryRun_GitOpenFails(t *testing.T) {
 	fixturePath := filepath.Join("..", "..", "test", "fixtures", "cvs", "simple")

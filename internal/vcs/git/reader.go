@@ -155,6 +155,23 @@ func (r *Reader) GetTags() (map[string]string, error) {
 	return tags, err
 }
 
+// GetHeadRevision returns the SHA of the current HEAD commit, or an empty
+// string if the repository has no commits.
+func (r *Reader) GetHeadRevision() (string, error) {
+	if r.repo == nil {
+		if err := r.Validate(); err != nil {
+			return "", err
+		}
+	}
+
+	head, err := r.repo.Head()
+	if err != nil {
+		return "", err
+	}
+
+	return head.Hash().String(), nil
+}
+
 // Close releases any resources held by the reader
 func (r *Reader) Close() error {
 	return nil

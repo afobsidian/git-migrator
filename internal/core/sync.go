@@ -80,6 +80,20 @@ func (s *Syncer) Run() error {
 		if err := s.syncCVSToGit(); err != nil {
 			return fmt.Errorf("cvs-to-git sync failed: %w", err)
 		}
+		// Advance LastGitCommit to the current Git HEAD so that the
+		// subsequent Git→CVS pass does not re-apply the commits that were
+		// just imported from CVS (which would create an infinite sync loop).
+		gitReader := gitpkg.NewReader(s.config.GitPath)
+		if validateErr := gitReader.Validate(); validateErr == nil {
+			if headCommit, headErr := gitReader.GetHeadRevision(); headErr == nil && headCommit != "" {
+				s.state.LastGitCommit = headCommit
+			} else if headErr != nil {
+				log.Printf("Warning: could not read Git HEAD after cvs-to-git sync; bidirectional cycle prevention may not work: %v", headErr)
+			}
+			_ = gitReader.Close()
+		} else {
+			log.Printf("Warning: could not open Git repo after cvs-to-git sync; bidirectional cycle prevention may not work: %v", validateErr)
+		}
 		return s.syncGitToCVS()
 	default:
 		return fmt.Errorf("unknown sync direction: %q", s.config.Direction)

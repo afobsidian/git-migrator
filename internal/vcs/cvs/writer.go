@@ -106,7 +106,6 @@ func (w *Writer) ApplyCommit(commit *vcs.Commit) error {
 	// Commit
 	cmd := exec.Command("cvs", "-d", w.repoPath, "commit", "-m", commit.Message) //nolint:gosec
 	cmd.Dir = w.workDir
-	cmd.Env = append(os.Environ(), fmt.Sprintf("CVS_CLIENT_NAME=%s", commit.Author))
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("cvs commit failed: %w\n%s", err, out)
 	}

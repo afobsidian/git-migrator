@@ -5,13 +5,13 @@ Bidirectional synchronisation between a Git repository and a CVS repository
 so that changes made in either system are reflected in the other.
 
 ## Acceptance Criteria
-- [ ] New Git commits can be applied to a CVS repository (`git-to-cvs`)
-- [ ] New CVS commits can be applied to a Git repository (`cvs-to-git`)
-- [ ] Both directions can run in a single operation (`bidirectional`)
-- [ ] Sync state is persisted so repeated runs only transfer new changes
-- [ ] Dry-run mode previews planned changes without applying them
-- [ ] CLI `sync` subcommand is available with `--config`, `--direction`, and `--dry-run` flags
-- [ ] Sync configuration is loaded from a YAML file
+- [x] New Git commits can be applied to a CVS repository (`git-to-cvs`)
+- [x] New CVS commits can be applied to a Git repository (`cvs-to-git`)
+- [x] Both directions can run in a single operation (`bidirectional`)
+- [x] Sync state is persisted so repeated runs only transfer new changes
+- [x] Dry-run mode previews planned changes without applying them
+- [x] CLI `sync` subcommand is available with `--config`, `--direction`, and `--dry-run` flags
+- [x] Sync configuration is loaded from a YAML file
 
 ## Test Cases
 1. SyncDirection constants have correct string values

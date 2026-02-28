@@ -5,6 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/adamf123git/git-migrator/internal/core"
 	"github.com/stretchr/testify/require"
@@ -133,4 +137,146 @@ func TestPrintSyncInfo_DoesNotPanic(t *testing.T) {
 
 	require.Contains(t, buf.String(), "/git")
 	require.Contains(t, buf.String(), "bidirectional")
+}
+
+// createSyncTestGitRepo creates a minimal Git repo at a temp path and returns it.
+func createSyncTestGitRepo(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	repo, err := gogit.PlainInit(dir, false)
+	require.NoError(t, err)
+	w, err := repo.Worktree()
+	require.NoError(t, err)
+	f := filepath.Join(dir, "README.md")
+	require.NoError(t, os.WriteFile(f, []byte("hello"), 0644))
+	_, err = w.Add("README.md")
+	require.NoError(t, err)
+	_, err = w.Commit("initial commit", &gogit.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Test",
+			Email: "test@example.com",
+			When:  time.Now(),
+		},
+	})
+	require.NoError(t, err)
+	return dir
+}
+
+// createSyncTestCVSRepo creates a minimal CVS CVSROOT structure.
+func createSyncTestCVSRepo(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "CVSROOT"), 0755))
+	return dir
+}
+
+// TestRunSync_DryRun_GitToCVS calls runSync end-to-end with a valid config
+// pointing at real repos in dry-run mode.  No CVS binary or CVS commits are
+// required because DryRun=true.
+func TestRunSync_DryRun_GitToCVS(t *testing.T) {
+	gitDir := createSyncTestGitRepo(t)
+	cvsDir := createSyncTestCVSRepo(t)
+
+	tmp := t.TempDir()
+	cfgPath := filepath.Join(tmp, "sync.yaml")
+	content := "git:\n  path: " + gitDir + "\ncvs:\n  path: " + cvsDir + "\n  module: mod\nsync:\n  direction: git-to-cvs\noptions:\n  dryRun: true\n  verbose: true\n"
+	require.NoError(t, os.WriteFile(cfgPath, []byte(content), 0644))
+
+	// Back up and restore flag values
+	origCfg := syncConfigFile
+	origDry := syncDryRun
+	origVerbose := syncVerbose
+	origDir := syncDirection
+	defer func() {
+		syncConfigFile = origCfg
+		syncDryRun = origDry
+		syncVerbose = origVerbose
+		syncDirection = origDir
+	}()
+
+	syncConfigFile = cfgPath
+	syncDryRun = false   // comes from config file
+	syncVerbose = false
+	syncDirection = ""
+
+	err := runSync(nil, nil)
+	require.NoError(t, err)
+}
+
+// TestRunSync_DryRun_FlagOverrides verifies that CLI flags override config values.
+func TestRunSync_DryRun_FlagOverrides(t *testing.T) {
+	gitDir := createSyncTestGitRepo(t)
+	cvsDir := createSyncTestCVSRepo(t)
+
+	tmp := t.TempDir()
+	cfgPath := filepath.Join(tmp, "sync.yaml")
+	content := "git:\n  path: " + gitDir + "\ncvs:\n  path: " + cvsDir + "\n  module: mod\nsync:\n  direction: cvs-to-git\n"
+	require.NoError(t, os.WriteFile(cfgPath, []byte(content), 0644))
+
+	origCfg := syncConfigFile
+	origDry := syncDryRun
+	origVerbose := syncVerbose
+	origDir := syncDirection
+	defer func() {
+		syncConfigFile = origCfg
+		syncDryRun = origDry
+		syncVerbose = origVerbose
+		syncDirection = origDir
+	}()
+
+	syncConfigFile = cfgPath
+	syncDryRun = true    // override: dry-run via flag
+	syncVerbose = true   // override: verbose via flag
+	syncDirection = "git-to-cvs" // override direction
+
+	err := runSync(nil, nil)
+	require.NoError(t, err)
+}
+
+// TestRunSync_InvalidConfig ensures runSync returns an error for a bad config.
+func TestRunSync_InvalidConfig(t *testing.T) {
+	origCfg := syncConfigFile
+	defer func() { syncConfigFile = origCfg }()
+
+	syncConfigFile = "/nonexistent/sync.yaml"
+	err := runSync(nil, nil)
+	require.Error(t, err)
+}
+
+// TestRunSync_SyncerRunFails covers the path where syncer.Run() returns an
+// error (valid YAML config but unreachable repositories).
+func TestRunSync_SyncerRunFails(t *testing.T) {
+	tmp := t.TempDir()
+	cfgPath := filepath.Join(tmp, "sync.yaml")
+	content := "git:\n  path: /nonexistent/git\ncvs:\n  path: /nonexistent/cvs\n  module: mod\nsync:\n  direction: cvs-to-git\n"
+	require.NoError(t, os.WriteFile(cfgPath, []byte(content), 0644))
+
+	origCfg := syncConfigFile
+	origDry := syncDryRun
+	origVerbose := syncVerbose
+	origDir := syncDirection
+	defer func() {
+		syncConfigFile = origCfg
+		syncDryRun = origDry
+		syncVerbose = origVerbose
+		syncDirection = origDir
+	}()
+
+	syncConfigFile = cfgPath
+	syncDryRun = false
+	syncVerbose = false
+	syncDirection = ""
+
+	err := runSync(nil, nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "sync failed")
+}
+
+// TestLoadSyncConfigFile_InvalidYAML tests that malformed YAML returns an error.
+func TestLoadSyncConfigFile_InvalidYAML(t *testing.T) {
+	tmp := t.TempDir()
+	cfgPath := filepath.Join(tmp, "invalid.yaml")
+	require.NoError(t, os.WriteFile(cfgPath, []byte(":\ninvalid::\n  bad"), 0644))
+	_, err := loadSyncConfigFile(cfgPath)
+	require.Error(t, err)
 }

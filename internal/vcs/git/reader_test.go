@@ -267,3 +267,69 @@ func TestGitReaderImplementsVCSReader(t *testing.T) {
 		Close() error
 	} = (*Reader)(nil)
 }
+
+// TestGitReaderGetCommitsSince_EmptyRevision verifies that passing an empty
+// revision to GetCommitsSince returns all commits.
+func TestGitReaderGetCommitsSince_EmptyRevision(t *testing.T) {
+	dir := createTestRepo(t, []struct {
+		file    string
+		content string
+		message string
+	}{
+		{"a.txt", "a", "commit A"},
+		{"b.txt", "b", "commit B"},
+	})
+
+	r := NewReader(dir)
+	iter, err := r.GetCommitsSince("") // empty string → all commits
+	require.NoError(t, err)
+
+	var commits []*vcs.Commit
+	for iter.Next() {
+		commits = append(commits, iter.Commit())
+	}
+	if len(commits) != 2 {
+		t.Errorf("GetCommitsSince(\"\") returned %d commits, want 2", len(commits))
+	}
+}
+
+// TestGitCommitIterator_OutOfBounds checks iterator boundary behaviour.
+func TestGitCommitIterator_OutOfBounds(t *testing.T) {
+	it := &gitCommitIterator{commits: nil}
+
+	// Before first Next()
+	if c := it.Commit(); c != nil {
+		t.Error("Commit() before Next() should return nil")
+	}
+	if err := it.Err(); err != nil {
+		t.Errorf("Err() should be nil, got %v", err)
+	}
+
+	// After exhaustion
+	if it.Next() {
+		t.Error("Next() on empty iterator should return false")
+	}
+	if c := it.Commit(); c != nil {
+		t.Error("Commit() after exhaustion should return nil")
+	}
+}
+
+// TestGitReaderGetBranches_Invalid verifies GetBranches returns an error for
+// an invalid path.
+func TestGitReaderGetBranches_Invalid(t *testing.T) {
+	r := NewReader("/nonexistent/path/12345")
+	_, err := r.GetBranches()
+	if err == nil {
+		t.Error("GetBranches() should fail on non-existent path")
+	}
+}
+
+// TestGitReaderGetTags_Invalid verifies GetTags returns an error for an invalid
+// path.
+func TestGitReaderGetTags_Invalid(t *testing.T) {
+	r := NewReader("/nonexistent/path/12345")
+	_, err := r.GetTags()
+	if err == nil {
+		t.Error("GetTags() should fail on non-existent path")
+	}
+}

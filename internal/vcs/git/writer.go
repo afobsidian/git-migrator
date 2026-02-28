@@ -195,6 +195,7 @@ func (w *Writer) ApplyCommit(commit *vcs.Commit) error {
 
 	// Create commit
 	hash, err := w.worktree.Commit(commit.Message, &git.CommitOptions{
+		AllowEmptyCommits: true,
 		Author: &object.Signature{
 			Name:  commit.Author,
 			Email: commit.Email,

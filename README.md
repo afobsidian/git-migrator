@@ -11,6 +11,7 @@ Git-Migrator is an open-source tool for migrating repositories from legacy versi
 ## ✨ Features
 
 - 🔄 **Full History Migration** - Preserve all commits, branches, tags, and metadata
+- 🔁 **Bidirectional Sync** - Keep Git and CVS repositories in sync after migration (Git ↔ CVS)
 - 🔌 **Plugin Architecture** - Support for multiple VCS systems (CVS, SVN, and more)
 - 🐳 **Dual Runtime** - Run locally or in Docker with equal functionality
 - 🖥️ **Dual Interface** - Command-line tool and web UI for monitoring
@@ -95,6 +96,15 @@ docker pull adamf123docker/git-migrator:latest
 ```bash
 # Migrate CVS repository to Git
 git-migrator migrate --config config.yaml
+
+# Sync changes between Git and CVS (bidirectional)
+git-migrator sync --config sync-config.yaml
+
+# Sync only new Git commits to CVS
+git-migrator sync --config sync-config.yaml --direction git-to-cvs
+
+# Sync only new CVS commits to Git
+git-migrator sync --config sync-config.yaml --direction cvs-to-git
 
 # Analyze source repository
 git-migrator analyze --source-type cvs --source /path/to/cvs/repo
@@ -244,6 +254,62 @@ git branch -a
 git tag -l
 ```
 
+## 🔁 Bidirectional Sync
+
+After the initial migration, keep your Git and CVS repositories in sync using the `sync` command.
+
+### Sync Configuration
+
+Create a `sync-config.yaml` file:
+
+```yaml
+git:
+  path: /path/to/git/repository
+
+cvs:
+  path: /path/to/cvs/repository   # CVSROOT path
+  module: mymodule                 # CVS module name
+  workDir: /tmp/cvs-workdir        # Optional: persistent CVS checkout dir
+
+sync:
+  direction: bidirectional         # git-to-cvs | cvs-to-git | bidirectional
+  stateFile: .sync-state.json      # Tracks last synced position
+
+mapping:
+  authors:
+    gituser: "CVS User <user@example.com>"
+
+options:
+  dryRun: false
+  verbose: false
+```
+
+### Running a Sync
+
+```bash
+# Bidirectional sync (default)
+git-migrator sync --config sync-config.yaml
+
+# Git → CVS only
+git-migrator sync --config sync-config.yaml --direction git-to-cvs
+
+# CVS → Git only
+git-migrator sync --config sync-config.yaml --direction cvs-to-git
+
+# Preview without making changes
+git-migrator sync --config sync-config.yaml --dry-run --verbose
+```
+
+**How it works:**
+
+| Direction | Behaviour |
+|-----------|-----------|
+| `cvs-to-git` | Reads CVS commits newer than the last sync timestamp and applies them to the Git repository |
+| `git-to-cvs` | Reads Git commits newer than the last synced hash and applies them to the CVS repository via `cvs commit` |
+| `bidirectional` | Runs CVS→Git first, then Git→CVS |
+
+Sync state is persisted to `stateFile` so repeated runs transfer only new commits.
+
 ## 🏗️ Architecture
 
 Git-Migrator uses a **plugin-based architecture** for maximum extensibility:
@@ -379,9 +445,9 @@ git-migrator migrate --config config.yaml --verbose
 - ✅ Resume capability
 - ✅ Web UI for monitoring
 - ✅ Docker support
+- ✅ Git ↔ CVS bidirectional sync
 
 ### Coming Soon (v2.0)
-- 🔜 Git ↔ CVS bidirectional sync
 - 🔜 SVN to Git migration
 - 🔜 Mercurial support
 

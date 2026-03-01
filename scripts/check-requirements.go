@@ -22,6 +22,7 @@ func main() {
 		{ID: "REQ-007", Name: "CLI Interface"},
 		{ID: "REQ-009", Name: "TDD with Regression Testing"},
 		{ID: "REQ-010", Name: "Requirements Validation"},
+		{ID: "REQ-020", Name: "Git ↔ CVS Bidirectional Sync"},
 	}
 
 	allValid := true

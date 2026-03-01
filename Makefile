@@ -46,7 +46,8 @@ test-unit:
 	$(GO) test -v ./test/requirements/REQ-006-docker/... && \
 	$(GO) test -v ./test/requirements/REQ-008-web-ui/... && \
 	$(GO) test -v ./test/requirements/REQ-018-rest-api/... && \
-	$(GO) test -v ./test/requirements/REQ-019-websocket/...
+	$(GO) test -v ./test/requirements/REQ-019-websocket/... && \
+	$(GO) test -v ./test/requirements/REQ-020-bidirectional-sync/...
 
 ## test-integration: Run integration tests
 test-integration:
